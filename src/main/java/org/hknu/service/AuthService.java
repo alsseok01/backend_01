@@ -77,7 +77,15 @@ public class AuthService {
             // 이메일 발송 실패 시 처리 로직 (예: 트랜잭션 롤백, 사용자에게 알림 등)
         }
 
+        // 로그인과 동일하게 토큰을 생성하고 필요한 정보를 함께 반환합니다.
+        String accessToken = tokenProvider.generateToken(registeredUser.getEmail());
+
         return LoginResponse.builder()
+                .accessToken(accessToken)
+                .id(registeredUser.getId())
+                .name(registeredUser.getName())
+                .email(registeredUser.getEmail())
+                .profileImage(registeredUser.getProfileImage())
                 .isNewUser(true)
                 .build();
     }

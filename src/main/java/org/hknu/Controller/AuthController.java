@@ -24,12 +24,12 @@ public class AuthController {
     private AuthService authService;
 
     @PostMapping("/register")
-    public ResponseEntity<LoginResponse> register(@RequestBody SignUpRequest signUpRequest) {
+    public ResponseEntity<?> register(@RequestBody SignUpRequest signUpRequest) {
         try{
             LoginResponse response = authService.register(signUpRequest);
             return ResponseEntity.ok(response);
         }catch (RuntimeException e){
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
 
     }

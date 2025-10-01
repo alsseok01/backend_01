@@ -1,5 +1,6 @@
 package org.hknu.Dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -19,5 +20,7 @@ public class LoginResponse {
     private Integer age;
     private Map<String, Boolean> preferences;
     private String bio;
+
+    @JsonProperty("isNweUser")
     private boolean isNewUser;
 }
