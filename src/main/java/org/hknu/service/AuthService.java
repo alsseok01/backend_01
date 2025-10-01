@@ -2,6 +2,7 @@ package org.hknu.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.mail.MessagingException;
 import org.hknu.Config.JwtTokenProvider;
 import org.hknu.Dto.LoginRequest;
 import org.hknu.Dto.LoginResponse;
@@ -11,10 +12,16 @@ import org.hknu.entity.Member;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 import java.util.Map;
+import java.util.Random;
+import java.util.UUID;
 
 @Service
 public class AuthService {
@@ -34,10 +41,21 @@ public class AuthService {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private EmailService emailService;
+
+    @Autowired
+    private JavaMailSender emailSender;
+
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public class EmailAlreadyUsedException extends RuntimeException {
+        public EmailAlreadyUsedException(String message) { super(message); }
+    }
+
     public LoginResponse  register(SignUpRequest signUpRequest) {
         // 이메일 중복 확인
         if (userRepository.existsByEmail(signUpRequest.getEmail())) {
-            throw new RuntimeException("이미 사용 중인 이메일입니다.");
+            throw new EmailAlreadyUsedException("이미 사용 중인 이메일입니다.");
         }
         Member user = new Member();
         user.setName(signUpRequest.getName());
@@ -45,29 +63,56 @@ public class AuthService {
         user.setPassword(passwordEncoder.encode(signUpRequest.getPassword()));
         user.setProfileImage("https://mblogthumb-phinf.pstatic.net/MjAyMDA2MTBfMTY1/MDAxNTkxNzQ2ODcyOTI2.Yw5WjjU3IuItPtqbegrIBJr3TSDMd_OPhQ2Nw-0-0ksg.8WgVjtB0fy0RCv0XhhUOOWt90Kz_394Zzb6xPjG6I8gg.PNG.lamute/user.png?type=w800");
         user.setProvider(Member.AuthProvider.LOCAL);
+        user.setEmailVerified(false);
+
+        String token = UUID.randomUUID().toString();
+        user.setVerificationToken(token);
 
         Member registeredUser = userRepository.save(user);
-        String token = tokenProvider.generateToken(registeredUser.getEmail());
+
+        try {
+            emailService.sendVerificationEmail(registeredUser.getEmail(), token);
+        } catch (MessagingException e) {
+            logger.error("인증 이메일 발송 실패: {}", registeredUser.getEmail(), e);
+            // 이메일 발송 실패 시 처리 로직 (예: 트랜잭션 롤백, 사용자에게 알림 등)
+        }
 
         return LoginResponse.builder()
-                .accessToken(token)
-                .id(registeredUser.getId())
-                .name(registeredUser.getName())
-                .email(registeredUser.getEmail())
-                .profileImage(registeredUser.getProfileImage())
                 .isNewUser(true)
                 .build();
+    }
+
+    public void verifyEmail(String token) {
+        Member user = userRepository.findByVerificationToken(token)
+                .orElseThrow(() -> new RuntimeException("유효하지 않은 인증 토큰입니다."));
+
+        user.setEmailVerified(true);
+        user.setVerificationToken(null); // 인증 후 토큰은 초기화
+        userRepository.save(user);
+    }
+
+    public void sendVerificationEmail(String email) {
+        // 6자리 인증 코드 생성
+        Random random = new Random();
+        String verificationCode = String.valueOf(100000 + random.nextInt(900000));
+
+        // TODO: 생성된 인증 코드를 Redis나 DB에 잠시 저장하여 나중에 검증할 수 있도록 해야 합니다.
+        // 예: redisTemplate.opsForValue().set(email, verificationCode, 5, TimeUnit.MINUTES);
+
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(email);
+        message.setSubject("[Launch Group Match] 회원가입 이메일 인증 코드");
+        message.setText("인증 코드: " + verificationCode);
+        emailSender.send(message);
     }
 
     public LoginResponse login(LoginRequest loginRequest) {
         Member member = userRepository.findByEmail(loginRequest.getEmail())
                 .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
 
-        logger.info("===== login 시작: DB에서 불러온 Member 객체 =====");
-        logger.info("Member Email: {}", member.getEmail());
-        logger.info("Member Age: {}", member.getAge());
-        logger.info("Member Preferences: {}", member.getPreferences());
-        logger.info("===============================================");
+        if (!member.isEmailVerified()) {
+            throw new RuntimeException("로그인하기 전에 이메일 인증을 완료해주세요.");
+        }
 
         if (!passwordEncoder.matches(loginRequest.getPassword(), member.getPassword())) {
             throw new RuntimeException("비밀번호가 일치하지 않습니다.");

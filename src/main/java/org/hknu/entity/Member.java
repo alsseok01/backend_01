@@ -35,6 +35,10 @@ public class Member {
     @Column(columnDefinition = "TEXT")
     private String bio;
 
+    private String verificationToken;
+
+    private boolean emailVerified = false;
+
     public enum AuthProvider {
         LOCAL, GOOGLE, KAKAO
     }
