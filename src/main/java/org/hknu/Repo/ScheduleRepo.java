@@ -21,4 +21,7 @@ public interface ScheduleRepo extends JpaRepository<Schedule, Long> {
     @Transactional // 삭제 작업은 트랜잭션 안에서 처리되어야 합니다.
     @Query("DELETE FROM Schedule s WHERE s.date < :today")
     void deleteByDateLessThan(@Param("today") String today);
+
+    @Query("SELECT s FROM Schedule s WHERE s.date < :today")
+    List<Schedule> findByDateLessThan(@Param("today") String today);
 }

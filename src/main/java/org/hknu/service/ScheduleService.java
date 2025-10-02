@@ -37,7 +37,11 @@ public class ScheduleService {
     @Transactional
     public void deletePastSchedules() {
         String today = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE);
-        scheduleRepository.deleteByDateLessThan(today);
+        // 날짜가 지난 스케줄을 모두 조회한 후 하나씩 삭제
+        List<Schedule> outdatedSchedules = scheduleRepository.findByDateLessThan(today);
+        for (Schedule schedule : outdatedSchedules) {
+            scheduleRepository.delete(schedule);  // matches도 함께 삭제됨
+        }
     }
 
     // [기존 코드 유지]
@@ -58,6 +62,7 @@ public class ScheduleService {
     // [기존 코드 유지] (내부의 deletePastSchedules 호출 제거)
     @Transactional(readOnly = true)
     public List<ScheduleResponse> getAllSchedules() {
+        deletePastSchedules();
         List<Schedule> allSchedules = scheduleRepository.findAll();
         return allSchedules.stream()
                 .map(this::convertToResponse)

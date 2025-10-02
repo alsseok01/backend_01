@@ -42,7 +42,7 @@ public class Schedule {
     @JoinColumn(name = "member_id", nullable = false)
     private Member member;
 
-    @OneToMany(mappedBy = "schedule", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "schedule", cascade = CascadeType.REMOVE, orphanRemoval = true)
     @Builder.Default // Builder 사용 시 초기화를 보장합니다.
     private List<Match> matches = new ArrayList<>();
 }
