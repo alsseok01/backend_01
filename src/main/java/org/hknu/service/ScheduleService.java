@@ -36,11 +36,15 @@ public class ScheduleService {
      */
     @Transactional
     public void deletePastSchedules() {
-        String today = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE);
-        // 날짜가 지난 스케줄을 모두 조회한 후 하나씩 삭제
-        List<Schedule> outdatedSchedules = scheduleRepository.findByDateLessThan(today);
-        for (Schedule schedule : outdatedSchedules) {
-            scheduleRepository.delete(schedule);  // matches도 함께 삭제됨
+        LocalDate today = LocalDate.now();
+        LocalDate limitDate = today.plusDays(21);  // 3주(21일) 이후 날짜 계산
+        List<Schedule> allSchedules = scheduleRepository.findAll();
+        for (Schedule schedule : allSchedules) {
+            LocalDate scheduleDate = LocalDate.parse(schedule.getDate());
+            // 오늘 이전이거나 limitDate 이후이면 삭제
+            if (scheduleDate.isBefore(today) || scheduleDate.isAfter(limitDate)) {
+                scheduleRepository.delete(schedule);
+            }
         }
     }
 
