@@ -34,4 +34,48 @@ public class EmailService {
 
         javaMailSender.send(mimeMessage);
     }
+
+    public void sendMatchRequestEmail(Member host, Member requester, Schedule schedule) throws MessagingException {
+        MimeMessage message = javaMailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, "UTF-8");
+        helper.setTo(host.getEmail());
+        helper.setSubject("[밥상친구] 매칭 신청이 도착했습니다");
+        String text = String.format(
+                "안녕하세요, %s님!\n\n" +
+                        "사용자 %s(%s)가 %s %s시 ‘%s’ 일정에 매칭을 신청했습니다.\n" +
+                        "웹사이트에 로그인하여 신청을 수락하거나 거절해 주세요.",
+                host.getName(), requester.getName(), requester.getEmail(), schedule.getDate(), schedule.getTime(), schedule.getPlaceName()
+        );
+        helper.setText(text);
+        javaMailSender.send(message);
+    }
+
+    public void sendMatchAcceptedEmail(Member requester, Member host, Schedule schedule) throws MessagingException {
+        MimeMessage message = javaMailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, "UTF-8");
+        helper.setTo(requester.getEmail());
+        helper.setSubject("[밥상친구] 매칭이 수락되었습니다");
+        String text = String.format(
+                "안녕하세요, %s님!\n\n" +
+                        "%s님이 %s %s시 ‘%s’ 일정에 대한 매칭을 수락했습니다. 즐거운 만남 가지세요!",
+                requester.getName(), host.getName(), schedule.getDate(), schedule.getTime(), schedule.getPlaceName()
+        );
+        helper.setText(text);
+        javaMailSender.send(message);
+    }
+
+    public void sendMatchRejectedEmail(Member requester, Member host, Schedule schedule) throws MessagingException {
+        MimeMessage message = javaMailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, "UTF-8");
+        helper.setTo(requester.getEmail());
+        helper.setSubject("[밥상친구] 매칭이 거절되었습니다");
+        String text = String.format(
+                "안녕하세요, %s님.\n\n" +
+                        "안타깝게도 %s님이 %s %s시 ‘%s’ 일정에 대한 매칭을 거절했습니다. 다음 기회를 노려보세요.",
+                requester.getName(), host.getName(), schedule.getDate(), schedule.getTime(), schedule.getPlaceName()
+        );
+        helper.setText(text);
+        javaMailSender.send(message);
+    }
+
 }
