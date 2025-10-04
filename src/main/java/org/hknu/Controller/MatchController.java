@@ -1,6 +1,7 @@
 package org.hknu.Controller;
 
 import org.hknu.Repo.MatchRepo;
+import org.hknu.Repo.MemberRepo;
 import org.hknu.entity.Match;
 import org.hknu.entity.Member;
 import org.hknu.service.MatchService;
@@ -19,6 +20,7 @@ import java.util.Map;
 public class MatchController {
     @Autowired private MatchService matchService;
     @Autowired private MatchRepo matchRepo;
+    @Autowired private MemberRepo memberRepository;
 
     @PostMapping
     public ResponseEntity<?> requestMatch(@RequestBody Map<String, Long> payload, @AuthenticationPrincipal UserDetails userDetails) {
