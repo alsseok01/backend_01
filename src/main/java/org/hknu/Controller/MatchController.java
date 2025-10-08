@@ -73,4 +73,17 @@ public class MatchController {
         }
     }
 
+    // 내가 보낸 매칭 신청 목록 조회
+    @GetMapping("/sent")
+    public ResponseEntity<List<Match>> getSentMatches(@AuthenticationPrincipal UserDetails userDetails) {
+        String requesterEmail = userDetails.getUsername();
+        Member requester = memberRepository.findByEmail(requesterEmail).orElse(null);
+        if (requester == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        // 요청자 ID로 매칭 리스트 조회
+        List<Match> matches = matchRepo.findByRequester_Id(requester.getId());
+        return ResponseEntity.ok(matches);
+    }
+
 }

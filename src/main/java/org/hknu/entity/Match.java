@@ -17,11 +17,11 @@ public class Match {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "schedule_id", nullable = false)
     private Schedule schedule; // 어떤 일정에 대한 매칭인지
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "requester_id", nullable = false)
     private Member requester; // 신청한 사람
 
