@@ -76,6 +76,7 @@ public class UserService implements UserDetailsService {
         logger.info("Member Preferences: {}", member.getPreferences());
         logger.info("=====================================");
 
+
         memberRepository.save(member);
 
         logger.info("===== updateProfile 정상 종료 =====");
