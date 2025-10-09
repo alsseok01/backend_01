@@ -73,6 +73,8 @@ public class MatchController {
         }
     }
 
+
+
     // 내가 보낸 매칭 신청 목록 조회
     @GetMapping("/sent")
     public ResponseEntity<List<Match>> getSentMatches(@AuthenticationPrincipal UserDetails userDetails) {
