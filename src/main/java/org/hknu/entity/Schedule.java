@@ -26,15 +26,16 @@ public class Schedule {
     private Integer time; // 약속 시간 (예: 19)
 
     @Column(nullable = false, columnDefinition = "TEXT")
-    private String text; // "강남불백에서 19:00 약속"
+    private String text;
 
     private String placeName;
     private String placeCategory;
 
     @Column(nullable = false)
-    private Integer participants; // 총 모집 인원
+    private Integer participants = 2; // 기본 모집 인원
 
     @Column(nullable = false)
+    @Builder.Default
     private Integer currentParticipants = 1; // 현재 참여 인원 (기본값 1)
 
     // ✅ Member 엔티티와 다대일(N:1) 관계 설정

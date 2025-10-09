@@ -49,14 +49,20 @@ public class MatchController {
 
     // 매칭 수락
     @PostMapping("/{matchId}/accept")
-    public ResponseEntity<?> acceptMatch(@PathVariable Long matchId, @AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseEntity<?> acceptMatch(@PathVariable Long matchId,
+                                         @AuthenticationPrincipal UserDetails userDetails) {
+        if (userDetails == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("인증 정보가 없습니다. 다시 로그인해 주세요.");
+        }
         try {
             matchService.acceptMatch(matchId, userDetails.getUsername());
             return ResponseEntity.ok().body("매칭을 수락했습니다.");
         } catch (IllegalArgumentException | IllegalStateException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("매칭 수락 중 오류가 발생했습니다.");
+            // 이 밖의 오류는 예상치 못한 상황이므로 500 대신 400으로 응답해도 좋습니다.
+            return ResponseEntity.badRequest().body("매칭 수락 중 오류가 발생했습니다: " + e.getMessage());
         }
     }
 
