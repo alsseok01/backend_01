@@ -79,7 +79,16 @@ public class MatchController {
         }
     }
 
-
+    @DeleteMapping("/{matchId}")
+    public ResponseEntity<?> deleteMatch(@PathVariable Long matchId, @AuthenticationPrincipal UserDetails userDetails) {
+        String requesterEmail = userDetails.getUsername();
+        try {
+            matchService.deleteMatch(matchId, requesterEmail);
+            return ResponseEntity.ok().body("매칭 신청을 삭제했습니다.");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+        }
+    }
 
     // 내가 보낸 매칭 신청 목록 조회
     @GetMapping("/sent")

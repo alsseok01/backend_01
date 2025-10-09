@@ -45,8 +45,10 @@ public class EmailService {
         String text = String.format(
                 "안녕하세요, %s님!\n\n" +
                         "사용자 %s(%s)가 %s %s시 ‘%s’ 일정에 매칭을 신청했습니다.\n" +
-                        "웹사이트에 로그인하여 신청을 수락하거나 거절해 주세요.",
-                host.getName(), requester.getName(), requester.getEmail(), schedule.getDate(), schedule.getTime(), schedule.getPlaceName()
+                        "웹사이트에 로그인하여 신청을 수락하거나 거절해 주세요.\n\n" +
+                "→ 매칭 요청 확인하기: http://localhost:3000/match-requests",
+                host.getName(), requester.getName(), requester.getEmail(),
+                schedule.getDate(), schedule.getTime(), schedule.getPlaceName()
         );
         helper.setText(text);
         javaMailSender.send(message);
@@ -59,7 +61,8 @@ public class EmailService {
         helper.setSubject("[밥상친구] 매칭이 수락되었습니다");
         String text = String.format(
                 "안녕하세요, %s님!\n\n" +
-                        "%s님이 %s %s시 ‘%s’ 일정에 대한 매칭을 수락했습니다. 즐거운 만남 가지세요!",
+                        "%s님이 %s %s시 ‘%s’ 일정에 대한 매칭을 수락했습니다. 즐거운 만남 가지세요!\n\n" +
+                        "→ 내가 보낸 신청 확인하기: http://localhost:3000/matches/sent",
                 requester.getName(), host.getName(), schedule.getDate(), schedule.getTime(), schedule.getPlaceName()
         );
         helper.setText(text);

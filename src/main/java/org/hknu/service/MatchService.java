@@ -125,4 +125,15 @@ public class MatchService {
         }
     }
 
+    @Transactional
+    public void deleteMatch(Long matchId, String requesterEmail) {
+        // 해당 매칭을 찾고, 요청자와 일치하는지 확인
+        Match match = matchRepository.findById(matchId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 매칭입니다."));
+        if (!match.getRequester().getEmail().equals(requesterEmail)) {
+            throw new IllegalArgumentException("본인이 신청한 매칭만 삭제할 수 있습니다.");
+        }
+        matchRepository.delete(match);
+    }
+
 }
