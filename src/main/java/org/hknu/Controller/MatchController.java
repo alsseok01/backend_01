@@ -37,15 +37,17 @@ public class MatchController {
         }
     }
 
+    // ✅ [수정] '/api/matches' 주소를 사용하는 메서드는 이것 하나만 남겨둡니다.
+    // 이 메서드가 '받은 신청' 목록을 '대기중'과 '수락됨' 상태 모두 포함하여 리스트로 반환합니다.
     @GetMapping
-    public ResponseEntity<List<Match>> getPendingMatches(@AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseEntity<List<Match>> getReceivedMatches(@AuthenticationPrincipal UserDetails userDetails) {
         String hostEmail = userDetails.getUsername();
-        Member host = memberRepository.findByEmail(hostEmail).orElse(null);
-        if (host == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+        Member host = memberRepository.findByEmail(hostEmail)
+                .orElseThrow(() -> new RuntimeException("사용자 정보를 찾을 수 없습니다."));
+
         List<Match.MatchStatus> statuses = Arrays.asList(Match.MatchStatus.PENDING, Match.MatchStatus.ACCEPTED);
         List<Match> matches = matchRepo.findBySchedule_Member_IdAndStatusIn(host.getId(), statuses);
+
         return ResponseEntity.ok(matches);
     }
 
@@ -63,7 +65,6 @@ public class MatchController {
         } catch (IllegalArgumentException | IllegalStateException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
-            // 이 밖의 오류는 예상치 못한 상황이므로 500 대신 400으로 응답해도 좋습니다.
             return ResponseEntity.badRequest().body("매칭 수락 중 오류가 발생했습니다: " + e.getMessage());
         }
     }
@@ -92,7 +93,7 @@ public class MatchController {
         }
     }
 
-    // 내가 보낸 매칭 신청 목록 조회
+    // '내가 보낸 신청' 목록을 리스트로 조회합니다.
     @GetMapping("/sent")
     public ResponseEntity<List<Match>> getSentMatches(@AuthenticationPrincipal UserDetails userDetails) {
         String requesterEmail = userDetails.getUsername();
@@ -100,9 +101,7 @@ public class MatchController {
         if (requester == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        // 요청자 ID로 매칭 리스트 조회
         List<Match> matches = matchRepo.findByRequester_Id(requester.getId());
         return ResponseEntity.ok(matches);
     }
-
 }
