@@ -12,6 +12,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -43,7 +44,8 @@ public class MatchController {
         if (host == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        List<Match> matches = matchRepo.findBySchedule_Member_IdAndStatus(host.getId(), Match.MatchStatus.PENDING);
+        List<Match.MatchStatus> statuses = Arrays.asList(Match.MatchStatus.PENDING, Match.MatchStatus.ACCEPTED);
+        List<Match> matches = matchRepo.findBySchedule_Member_IdAndStatusIn(host.getId(), statuses);
         return ResponseEntity.ok(matches);
     }
 
