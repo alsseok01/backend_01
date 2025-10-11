@@ -49,10 +49,11 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(authz -> authz
-                        .requestMatchers("/api/auth/**", "/oauth2/**", "/api/auth/verify-email**").permitAll()
+                        .requestMatchers("/api/auth/**", "/oauth2/**", "/api/auth/verify-email**","/ws/**").permitAll()
                         .requestMatchers(HttpMethod.PUT, "/api/user/profile").authenticated()
                         .requestMatchers("/api/schedules/**").authenticated()
                         .requestMatchers("/api/matches/**").authenticated()
+                        .requestMatchers("/api/chat/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth2 -> oauth2
@@ -70,7 +71,7 @@ public class SecurityConfig {
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(Arrays.asList("http://localhost:3000")); // 🔥 수정
+        configuration.setAllowedOriginPatterns(Arrays.asList("http://localhost:3000"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);

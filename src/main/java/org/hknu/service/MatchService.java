@@ -26,12 +26,12 @@ public class MatchService {
         Schedule schedule = scheduleRepository.findById(scheduleId)
                 .orElseThrow(() -> new RuntimeException("일정 정보를 찾을 수 없습니다."));
 
-        // 자신의 일정에 신청하는 경우 방지
         if (schedule.getMember().getId().equals(requester.getId())) {
             throw new IllegalArgumentException("자신의 일정에는 매칭을 신청할 수 없습니다.");
         }
-        // 중복 신청 방지
-        if (matchRepository.existsByScheduleIdAndRequesterId(scheduleId, requester.getId())) {
+
+        // ✅ [수정] 새로 만든 명시적인 쿼리 메서드를 사용하여 중복 신청을 확인합니다.
+        if (matchRepository.findBySchedule_IdAndRequester_Id(scheduleId, requester.getId()).isPresent()) {
             throw new IllegalArgumentException("이미 해당 일정에 매칭을 신청했습니다.");
         }
 
@@ -42,11 +42,9 @@ public class MatchService {
                 .build();
 
         Match savedMatch = matchRepository.save(newMatch);
-        // 일정 주인에게 이메일 발송
         try {
             emailService.sendMatchRequestEmail(schedule.getMember(), requester, schedule);
         } catch (MessagingException e) {
-            // 메일 발송 실패는 서비스 실패와 별도로 로깅만 수행
             System.err.println("매칭 신청 메일 발송 실패: " + e.getMessage());
         }
         return savedMatch;
@@ -126,14 +124,45 @@ public class MatchService {
     }
 
     @Transactional
-    public void deleteMatch(Long matchId, String requesterEmail) {
-        // 해당 매칭을 찾고, 요청자와 일치하는지 확인
+    public void deleteMatch(Long matchId, String currentUserEmail) {
         Match match = matchRepository.findById(matchId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 매칭입니다."));
-        if (!match.getRequester().getEmail().equals(requesterEmail)) {
-            throw new IllegalArgumentException("본인이 신청한 매칭만 삭제할 수 있습니다.");
+
+        String requesterEmail = match.getRequester().getEmail();
+        String hostEmail = match.getSchedule().getMember().getEmail();
+
+        // 매칭 신청자나 호스트가 아니면 삭제 권한 없음
+        if (!currentUserEmail.equals(requesterEmail) && !currentUserEmail.equals(hostEmail)) {
+            throw new IllegalArgumentException("매칭에 참여한 사용자만 삭제할 수 있습니다.");
         }
+
         matchRepository.delete(match);
+    }
+
+    @Transactional
+    public void confirmMatch(Long matchId, String currentUserEmail) {
+        Match match = matchRepository.findById(matchId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 매칭입니다."));
+
+        String requesterEmail = match.getRequester().getEmail();
+        String hostEmail = match.getSchedule().getMember().getEmail();
+
+        // 매칭 당사자만 확정 가능
+        if (!currentUserEmail.equals(requesterEmail) && !currentUserEmail.equals(hostEmail)) {
+            throw new IllegalArgumentException("매칭에 참여한 사용자만 확정할 수 있습니다.");
+        }
+
+        // '수락됨' 상태일 때만 확정 가능
+        if (match.getStatus() != Match.MatchStatus.ACCEPTED) {
+            throw new IllegalStateException("수락된 매칭만 확정할 수 있습니다.");
+        }
+        match.setStatus(Match.MatchStatus.CONFIRMED);
+
+        Schedule schedule = match.getSchedule();
+        schedule.setCurrentParticipants(schedule.getParticipants()); // 현재 인원을 최대 인원과 동일하게 설정
+
+        scheduleRepository.save(schedule); // 변경된 일정 저장
+        matchRepository.save(match);
     }
 
 }

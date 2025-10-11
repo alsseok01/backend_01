@@ -26,12 +26,13 @@ public class Match {
     private Member requester; // 신청한 사람
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 50)
     private MatchStatus status = MatchStatus.PENDING; // 매칭 상태 (대기중, 수락됨, 거절됨)
 
     public enum MatchStatus {
         PENDING,
         ACCEPTED,
-        REJECTED
+        REJECTED,
+        CONFIRMED
     }
 }

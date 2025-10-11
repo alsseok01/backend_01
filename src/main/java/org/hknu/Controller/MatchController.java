@@ -37,17 +37,22 @@ public class MatchController {
         }
     }
 
-    // ✅ [수정] '/api/matches' 주소를 사용하는 메서드는 이것 하나만 남겨둡니다.
-    // 이 메서드가 '받은 신청' 목록을 '대기중'과 '수락됨' 상태 모두 포함하여 리스트로 반환합니다.
+    // ✅ [수정] 받은 모든 매칭(대기중, 수락됨, 거절됨)을 조회하는 API
     @GetMapping
-    public ResponseEntity<List<Match>> getReceivedMatches(@AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseEntity<List<Match>> getAllReceivedMatches(@AuthenticationPrincipal UserDetails userDetails) {
         String hostEmail = userDetails.getUsername();
-        Member host = memberRepository.findByEmail(hostEmail)
-                .orElseThrow(() -> new RuntimeException("사용자 정보를 찾을 수 없습니다."));
-
-        List<Match.MatchStatus> statuses = Arrays.asList(Match.MatchStatus.PENDING, Match.MatchStatus.ACCEPTED);
-        List<Match> matches = matchRepo.findBySchedule_Member_IdAndStatusIn(host.getId(), statuses);
-
+        Member host = memberRepository.findByEmail(hostEmail).orElse(null);
+        if (host == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        // 모든 상태의 매칭을 조회하도록 수정
+        List<Match.MatchStatus> statuses = Arrays.asList(
+                Match.MatchStatus.PENDING,
+                Match.MatchStatus.ACCEPTED,
+                Match.MatchStatus.REJECTED
+        );
+        List<Match> matches =
+                matchRepo.findBySchedule_Member_IdAndStatusIn(host.getId(), statuses);
         return ResponseEntity.ok(matches);
     }
 
@@ -104,4 +109,17 @@ public class MatchController {
         List<Match> matches = matchRepo.findByRequester_Id(requester.getId());
         return ResponseEntity.ok(matches);
     }
+
+    @PostMapping("/{matchId}/confirm")
+    public ResponseEntity<?> confirmMatch(@PathVariable Long matchId, @AuthenticationPrincipal UserDetails userDetails) {
+        try {
+            matchService.confirmMatch(matchId, userDetails.getUsername());
+            return ResponseEntity.ok().body("매칭을 확정했습니다.");
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("매칭 확정 중 오류가 발생했습니다.");
+        }
+    }
+
 }

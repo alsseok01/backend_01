@@ -12,8 +12,9 @@ import java.util.List;
 
 public interface ScheduleRepo extends JpaRepository<Schedule, Long> {
     // ✅ 매칭 기능을 위해, 자신을 제외한 모든 사용자의 일정을 찾는 쿼리 메소드
+    @Query("SELECT s FROM Schedule s WHERE s.member <> :member AND s.currentParticipants < s.participants")
     List<Schedule> findAllByMemberNot(Member member);
-    @Query("SELECT s FROM Schedule s WHERE s.member <> :member AND s.placeCategory IN :categories")
+    @Query("SELECT s FROM Schedule s WHERE s.member <> :member AND s.placeCategory IN :categories and s.currentParticipants < s.participants")
     List<Schedule> findWithCategoryFilter(@Param("member") Member member, @Param("categories") List<String> categories);
     List<Schedule> findByMemberEmail(String email);
 
