@@ -2,8 +2,11 @@ package org.hknu.service;
 
 import org.hknu.Dto.ChatMessage;
 import org.hknu.Repo.ChatMessageRepo;
+import org.hknu.Repo.MatchRepo;
 import org.hknu.entity.ChatMessageEntity;
+import org.hknu.entity.Member;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -16,6 +19,12 @@ public class ChatService {
     @Autowired
     private ChatMessageRepo chatMessageRepository;
 
+    @Autowired
+    private SimpMessagingTemplate messagingTemplate;
+
+    @Autowired
+    private MatchRepo matchRepository;
+
     public ChatMessage saveMessage(Long matchId, ChatMessage chatMessage) {
         ChatMessageEntity entity = ChatMessageEntity.builder()
                 .matchId(matchId)
@@ -25,7 +34,27 @@ public class ChatService {
                 .timestamp(LocalDateTime.now())
                 .build();
         chatMessageRepository.save(entity);
-        return chatMessage; // 저장 후, 받은 메시지를 그대로 반환하여 broadcast
+
+        matchRepository.findById(matchId).ifPresent(match -> {
+            Member requester = match.getRequester();
+            Member host = match.getSchedule().getMember();
+            Long senderId = chatMessage.getSenderId();
+
+            // 메시지를 보낸 사람이 아닌, 받는 사람의 ID를 찾습니다.
+            Long recipientId = null;
+            if (senderId.equals(requester.getId())) {
+                recipientId = host.getId();
+            } else if (senderId.equals(host.getId())) {
+                recipientId = requester.getId();
+            }
+
+            // 받는 사람의 개인 알림 채널로 "새 메시지 왔어!" 라는 간단한 신호를 보냅니다.
+            if (recipientId != null) {
+                messagingTemplate.convertAndSend("/topic/user/" + recipientId + "/notifications", "new_message");
+            }
+        });
+
+        return chatMessage;
     }
 
     public List<ChatMessage> getMessageHistory(Long matchId) {
