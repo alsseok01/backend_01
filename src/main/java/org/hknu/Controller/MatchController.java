@@ -49,7 +49,8 @@ public class MatchController {
         List<Match.MatchStatus> statuses = Arrays.asList(
                 Match.MatchStatus.PENDING,
                 Match.MatchStatus.ACCEPTED,
-                Match.MatchStatus.REJECTED
+                Match.MatchStatus.REJECTED,
+                Match.MatchStatus.CONFIRMED
         );
         List<Match> matches =
                 matchRepo.findBySchedule_Member_IdAndStatusIn(host.getId(), statuses);
