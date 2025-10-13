@@ -149,6 +149,8 @@ public class ScheduleService {
                 .name(member.getName())
                 .profileImage(member.getProfileImage())
                 .preferences(preferencesMap)
+                .averageRating(member.getAverageRating()) // 평점 정보 추가
+                .reviewCount(member.getReviewCount())     // 후기 개수 정보 추가
                 .build();
 
         return ScheduleResponse.builder()

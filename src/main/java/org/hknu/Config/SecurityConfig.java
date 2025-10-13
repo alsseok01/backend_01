@@ -49,11 +49,12 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(authz -> authz
-                        .requestMatchers("/api/auth/**", "/oauth2/**", "/api/auth/verify-email**","/ws/**").permitAll()
+                        .requestMatchers("/api/auth/**", "/oauth2/**", "/api/auth/verify-email**","/ws/**", "/api/ai/**").permitAll()
                         .requestMatchers(HttpMethod.PUT, "/api/user/profile").authenticated()
                         .requestMatchers("/api/schedules/**").authenticated()
                         .requestMatchers("/api/matches/**").authenticated()
                         .requestMatchers("/api/chat/**").authenticated()
+                        .requestMatchers("/api/board/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth2 -> oauth2

@@ -58,12 +58,12 @@ public class MatchService {
 
         Match match = matchRepository.findByIdAndSchedule_Member_Id(matchId, host.getId())
                 .orElseThrow(() -> new IllegalArgumentException("권한이 없거나 존재하지 않는 매칭입니다."));
+
         if (match.getStatus() != Match.MatchStatus.PENDING) {
             throw new IllegalStateException("이미 처리된 매칭입니다.");
         }
 
         Schedule schedule = match.getSchedule();
-        // participants 값이 null인지 확인
         Integer participants = schedule.getParticipants();
         if (participants == null) {
             throw new IllegalStateException("일정의 모집 인원(participants)이 설정되지 않았습니다.");
@@ -74,31 +74,19 @@ public class MatchService {
         if (schedule.getCurrentParticipants() >= participants) {
             throw new IllegalStateException("모집 인원이 가득 찼습니다.");
         }
-        if (schedule.getMember() == null) {
-            throw new IllegalStateException("스케줄에 작성자 정보가 없습니다.");
-        }
 
-        String requesterEmail = match.getRequester().getEmail();
-// 간단한 형태의 유효성 검사: null 아니고 '@' 포함 여부 확인
-        if (requesterEmail != null && requesterEmail.contains("@")) {
-            try {
-                emailService.sendMatchAcceptedEmail(match.getRequester(), host, schedule);
-            } catch (Exception e) {
-                // 이메일 발송 실패는 비즈니스 로직 실패로 처리하지 않고 로깅만 수행
-                System.err.println("매칭 수락 메일 발송 실패: " + e.getMessage());
-            }
-        } else {
-            System.err.println("유효하지 않은 이메일 주소 (" + requesterEmail + ")로 인해 메일을 보내지 않았습니다.");
-        }
-
+        // 1. 상태 변경 및 DB 저장을 먼저 수행합니다.
         match.setStatus(Match.MatchStatus.ACCEPTED);
         schedule.setCurrentParticipants(schedule.getCurrentParticipants() + 1);
         matchRepository.save(match);
         scheduleRepository.save(schedule);
-        // 이메일 발송 실패는 서비스 실패로 간주하지 않음
+
+        // 2. 그 후에 이메일 발송을 시도합니다.
         try {
+            // 중복 코드를 제거하고 여기서 한 번만 이메일을 보냅니다.
             emailService.sendMatchAcceptedEmail(match.getRequester(), host, schedule);
-        } catch (MessagingException e) {
+        } catch (Exception e) {
+            // 이메일 발송에 실패하더라도 매칭 수락은 이미 완료되었으므로, 에러 로그만 남깁니다.
             System.err.println("매칭 수락 메일 발송 실패: " + e.getMessage());
         }
     }
@@ -118,7 +106,7 @@ public class MatchService {
         // 신청자에게 거절 메일 발송
         try {
             emailService.sendMatchRejectedEmail(match.getRequester(), host, match.getSchedule());
-        } catch (MessagingException e) {
+        } catch (Exception e) {
             System.err.println("매칭 거절 메일 발송 실패: " + e.getMessage());
         }
     }

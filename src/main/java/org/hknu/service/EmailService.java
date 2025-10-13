@@ -4,6 +4,7 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import org.hknu.entity.Member;
+import org.hknu.entity.Post;
 import org.hknu.entity.Schedule;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -81,6 +82,34 @@ public class EmailService {
         );
         helper.setText(text);
         javaMailSender.send(message);
+    }
+    public void sendCommentNotificationEmail(Member postAuthor, Member commentAuthor,Post post) {
+        // 자신의 글에 단 댓글은 알림을 보내지 않음
+        if (postAuthor.getEmail().equals(commentAuthor.getEmail())) {
+            return;
+        }
+
+        try {
+            MimeMessage message = javaMailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, "UTF-8");
+            helper.setTo(postAuthor.getEmail());
+            helper.setSubject("[밥상친구] 회원님의 게시글에 새 댓글이 달렸습니다!");
+
+            String text = String.format(
+                    "안녕하세요, %s님!\n\n" +
+                            "회원님의 게시글 '%s'에 %s님이 새 댓글을 남겼습니다.\n\n" +
+                            "지금 바로 확인해보세요!\n" +
+                            "→ 게시판으로 이동하기: http://localhost:3000/board",
+                    postAuthor.getName(),
+                    post.getTitle(),
+                    commentAuthor.getName()
+            );
+
+            helper.setText(text);
+            javaMailSender.send(message);
+        } catch (MessagingException e) {
+            System.err.println("댓글 알림 메일 발송 실패: " + e.getMessage());
+        }
     }
 
 }

@@ -21,6 +21,9 @@ public class LoginResponse {
     private Map<String, Boolean> preferences;
     private String bio;
 
+    private Double averageRating;
+    private Integer reviewCount;
+
     @JsonProperty("isNewUser")
     private boolean isNewUser;
 }

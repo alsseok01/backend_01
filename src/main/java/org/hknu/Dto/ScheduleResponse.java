@@ -25,5 +25,7 @@ public class ScheduleResponse {
         private String name;
         private String profileImage;
         private Map<String, Boolean> preferences;
+        private Double averageRating;
+        private Integer reviewCount;
     }
 }

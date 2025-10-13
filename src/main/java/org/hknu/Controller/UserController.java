@@ -94,8 +94,11 @@ public class UserController {
                 .age(member.getAge())
                 .preferences(preferencesMap)
                 .bio(member.getBio())
+                .averageRating(member.getAverageRating())
+                .reviewCount(member.getReviewCount())
                 .isNewUser(isNewUser)
                 .build();
+
 
         return ResponseEntity.ok(userProfile);
     }

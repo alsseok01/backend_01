@@ -39,6 +39,11 @@ public class Member {
 
     private boolean emailVerified = false;
 
+    @Builder.Default
+    private Double averageRating = 0.0;
+    @Builder.Default
+    private Integer reviewCount = 0;
+
     public enum AuthProvider {
         LOCAL, GOOGLE, KAKAO
     }

@@ -14,7 +14,7 @@ public interface MatchRepo extends JpaRepository<Match, Long> {
     Optional<Match> findBySchedule_IdAndRequester_Id(@Param("scheduleId") Long scheduleId, @Param("requesterId") Long requesterId);
 
     // (이하 다른 메서드들은 기존 코드 그대로 유지)
-    @EntityGraph(attributePaths = {"requester", "schedule"})
+    @EntityGraph(attributePaths = {"requester", "schedule", "schedule.member"})
     Optional<Match> findByIdAndSchedule_Member_Id(Long matchId, Long memberId);
 
     @EntityGraph(attributePaths = {"requester", "schedule", "schedule.member"})

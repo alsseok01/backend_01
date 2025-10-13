@@ -29,6 +29,11 @@ public class Match {
     @Column(nullable = false, length = 50)
     private MatchStatus status = MatchStatus.PENDING; // 매칭 상태 (대기중, 수락됨, 거절됨)
 
+    @Builder.Default
+    private boolean requesterReviewed = false;
+    @Builder.Default
+    private boolean hostReviewed = false;
+
     public enum MatchStatus {
         PENDING,
         ACCEPTED,
