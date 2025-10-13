@@ -63,7 +63,6 @@ public class ScheduleService {
         scheduleRepository.delete(schedule);
     }
 
-    // [기존 코드 유지] (내부의 deletePastSchedules 호출 제거)
     @Transactional(readOnly = true)
     public List<ScheduleResponse> getAllSchedules() {
         deletePastSchedules();
@@ -94,7 +93,6 @@ public class ScheduleService {
         return convertToResponse(savedSchedule);
     }
 
-    // [기존 코드 유지] (내부의 deletePastSchedules 호출 제거)
     @Transactional(readOnly = true)
     public List<ScheduleResponse> getFilteredSchedules(String userEmail, List<String> categories) {
         Member currentUser = memberRepository.findByEmail(userEmail)
@@ -112,7 +110,6 @@ public class ScheduleService {
                 .collect(Collectors.toList());
     }
 
-    // [기존 코드 유지] (내부의 deletePastSchedules 호출 제거)
     @Transactional(readOnly = true)
     public Optional<ScheduleResponse> getRandomSchedule(String userEmail) {
         Member currentUser = memberRepository.findByEmail(userEmail)
@@ -127,7 +124,6 @@ public class ScheduleService {
         return Optional.of(convertToResponse(schedules.get(0)));
     }
 
-    // [기존 코드 유지] (내부의 deletePastSchedules 호출 제거)
     @Transactional(readOnly = true)
     public List<ScheduleResponse> getMySchedules(String userEmail) {
         List<Schedule> schedules = scheduleRepository.findByMemberEmail(userEmail);
