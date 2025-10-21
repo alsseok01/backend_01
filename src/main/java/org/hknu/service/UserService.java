@@ -81,4 +81,12 @@ public class UserService implements UserDetailsService {
 
         logger.info("===== updateProfile 정상 종료 =====");
     }
+
+    @Transactional
+    public void saveFCMToken(String userEmail, String token) {
+        Member member = memberRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new RuntimeException("FCM 토큰을 저장할 사용자를 찾을 수 없습니다."));
+        member.setFcmToken(token);
+        memberRepository.save(member);
+    }
 }

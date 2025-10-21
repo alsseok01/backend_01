@@ -123,6 +123,9 @@ public class MatchService {
         if (!currentUserEmail.equals(requesterEmail) && !currentUserEmail.equals(hostEmail)) {
             throw new IllegalArgumentException("매칭에 참여한 사용자만 삭제할 수 있습니다.");
         }
+        if (match.getReviews() != null && !match.getReviews().isEmpty()) {
+            throw new IllegalStateException("리뷰가 작성된 매칭은 삭제하거나 나갈 수 없습니다.");
+        }
 
         matchRepository.delete(match);
     }

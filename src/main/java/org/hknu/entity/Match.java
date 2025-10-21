@@ -6,6 +6,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -33,6 +36,10 @@ public class Match {
     private boolean requesterReviewed = false;
     @Builder.Default
     private boolean hostReviewed = false;
+
+    @OneToMany(mappedBy = "match", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    @Builder.Default
+    private List<Review> reviews = new ArrayList<>();
 
     public enum MatchStatus {
         PENDING,

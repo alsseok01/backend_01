@@ -44,6 +44,14 @@ public class ScheduleService {
             // 오늘 이전이거나 limitDate 이후이면 삭제
             if (scheduleDate.isBefore(today) || scheduleDate.isAfter(limitDate)) {
                 scheduleRepository.delete(schedule);
+
+                boolean hasReviews = schedule.getMatches().stream()
+                        .anyMatch(match -> !match.getReviews().isEmpty());
+
+                // ✅ 리뷰가 없는 경우에만 안전하게 삭제
+                if (!hasReviews) {
+                    scheduleRepository.delete(schedule);
+                }
             }
         }
     }

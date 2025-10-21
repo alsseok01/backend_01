@@ -44,6 +44,9 @@ public class Member {
     @Builder.Default
     private Integer reviewCount = 0;
 
+    @Column(columnDefinition = "TEXT")
+    private String fcmToken;
+
     public enum AuthProvider {
         LOCAL, GOOGLE, KAKAO
     }

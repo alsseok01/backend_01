@@ -1,8 +1,10 @@
 package org.hknu.service;
 
+import com.google.firebase.messaging.FirebaseMessagingException;
 import org.hknu.Dto.ChatMessage;
 import org.hknu.Repo.ChatMessageRepo;
 import org.hknu.Repo.MatchRepo;
+import org.hknu.Repo.MemberRepo;
 import org.hknu.entity.ChatMessageEntity;
 import org.hknu.entity.Member;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +26,12 @@ public class ChatService {
 
     @Autowired
     private MatchRepo matchRepository;
+
+    @Autowired
+    private MemberRepo memberRepository;
+
+    @Autowired
+    private FCMService fcmService;
 
     public ChatMessage saveMessage(Long matchId, ChatMessage chatMessage) {
         ChatMessageEntity entity = ChatMessageEntity.builder()
@@ -51,6 +59,20 @@ public class ChatService {
             // 받는 사람의 개인 알림 채널로 "새 메시지 왔어!" 라는 간단한 신호를 보냅니다.
             if (recipientId != null) {
                 messagingTemplate.convertAndSend("/topic/user/" + recipientId + "/notifications", "new_message");
+
+                memberRepository.findById(recipientId).ifPresent(recipient -> {
+                    if (recipient.getFcmToken() != null && !recipient.getFcmToken().isEmpty()) {
+                        try {
+                            fcmService.sendNotification(
+                                    recipient.getFcmToken(),
+                                    chatMessage.getSenderName(), // 알림 제목
+                                    chatMessage.getContent()     // 알림 내용
+                            );
+                        } catch (FirebaseMessagingException e) {
+                            System.err.println("FCM 알림 전송 실패: " + e.getMessage());
+                        }
+                    }
+                });
             }
         });
 

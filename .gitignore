@@ -38,3 +38,5 @@ out/
 
 # Sensitive properties
 application.properties
+
+src/main/resources/firebase-adminsdk-key.json

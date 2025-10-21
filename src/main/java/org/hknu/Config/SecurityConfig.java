@@ -55,6 +55,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/matches/**").authenticated()
                         .requestMatchers("/api/chat/**").authenticated()
                         .requestMatchers("/api/board/**").authenticated()
+                        .requestMatchers("/api/fcm/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth2 -> oauth2
