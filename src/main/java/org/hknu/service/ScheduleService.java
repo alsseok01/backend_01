@@ -6,6 +6,7 @@ import org.hknu.Dto.ScheduleCreateRequest;
 import org.hknu.Dto.ScheduleResponse;
 import org.hknu.Repo.MemberRepo;
 import org.hknu.Repo.ScheduleRepo;
+import org.hknu.entity.Match;
 import org.hknu.entity.Member;
 import org.hknu.entity.Schedule;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -134,8 +135,41 @@ public class ScheduleService {
 
     @Transactional(readOnly = true)
     public List<ScheduleResponse> getMySchedules(String userEmail) {
-        List<Schedule> schedules = scheduleRepository.findByMemberEmail(userEmail);
-        return schedules.stream()
+        List<Schedule> schedules = scheduleRepository.findByMemberEmail(userEmail); // 1. 내가 만든 모든 일정을 가져옵니다.
+
+        // 2. "완료된" 일정을 필터링합니다.
+        List<Schedule> filteredSchedules = schedules.stream()
+                .filter(schedule -> {
+                    // 2-1. 일정에 연결된 매치 목록을 가져옵니다.
+                    List<Match> matches = schedule.getMatches();
+
+                    // 2-2. 매치가 없으면(아직 매칭 안됨) 무조건 표시합니다.
+                    if (matches == null || matches.isEmpty()) {
+                        return true; // Keep
+                    }
+
+                    // 2-3. 'CONFIRMED' 상태인 매치 목록을 찾습니다.
+                    List<Match> confirmedMatches = matches.stream()
+                            .filter(m -> m.getStatus() == Match.MatchStatus.CONFIRMED)
+                            .collect(Collectors.toList());
+
+                    // 2-4. 'CONFIRMED'된 매치가 하나도 없으면(아직 약속 확정 전) 무조건 표시합니다.
+                    if (confirmedMatches.isEmpty()) {
+                        return true; // Keep
+                    }
+
+                    // 2-5. 'CONFIRMED'된 매치 중, *모든* 매치가 양측(호스트, 신청자) 리뷰를 완료했는지 확인합니다.
+                    boolean allConfirmedMatchesAreReviewed = confirmedMatches.stream()
+                            .allMatch(m -> m.isHostReviewed() && m.isRequesterReviewed());
+
+                    // 2-6. 만약 모든 확정된 매치가 리뷰 완료(true)라면, 이 일정은 "완료됨"이므로 숨깁니다(false 반환).
+                    //      하나라도 리뷰가 안 된 매치가(false) 있다면, 아직 "진행중"이므로 표시합니다(true 반환).
+                    return !allConfirmedMatchesAreReviewed; // Keep if NOT all reviewed
+                })
+                .collect(Collectors.toList());
+
+        // 3. 필터링된 목록만 DTO로 변환하여 반환합니다.
+        return filteredSchedules.stream()
                 .map(this::convertToResponse)
                 .collect(Collectors.toList());
     }

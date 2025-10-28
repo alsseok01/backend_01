@@ -67,4 +67,28 @@ public class BoardController {
             return ResponseEntity.notFound().build();
         }
     }
+
+    @PutMapping("/{postId}/view")
+    public ResponseEntity<Void> increaseViewCount(@PathVariable Long postId) {
+        try {
+            boardService.increaseViewCount(postId);
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @PostMapping("/{postId}/like")
+    public ResponseEntity<PostResponse> likePost(
+            @PathVariable Long postId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        try {
+            // ✅ [수정] 서비스가 DTO를 직접 반환
+            PostResponse updatedPostResponse = boardService.likePost(postId, userDetails.getUsername());
+            // ✅ [수정] DTO 변환 로직(PostResponse.from) 제거
+            return ResponseEntity.ok(updatedPostResponse);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
 }

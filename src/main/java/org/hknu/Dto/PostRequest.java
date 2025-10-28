@@ -8,4 +8,7 @@ public class PostRequest {
     private String title;
     private String content;
     private List<String> tags;
+    private Double latitude;
+    private Double longitude;
+    private String address;
 }

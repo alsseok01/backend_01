@@ -2,17 +2,17 @@ package org.hknu.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.List;
 
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
@@ -25,8 +25,7 @@ public class Post {
     @Column(nullable = false)
     private String title;
 
-    @Lob // 대용량 텍스트를 위한 어노테이션
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "LONGTEXT")
     private String content;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -46,7 +45,27 @@ public class Post {
     @Builder.Default
     private List<Comment> comments = new ArrayList<>();
 
-    // 편의 메서드
+    @Builder.Default
+    @Column(nullable = false)
+    private Integer likes = 0;
+
+    @Builder.Default
+    @Column(nullable = false)
+    private Integer views = 0;
+
+    @Column(nullable = true)
+    private Double latitude; // 위도
+
+    @Column(nullable = true)
+    private Double longitude; // 경도
+
+    @Column(nullable = true)
+    private String address;
+
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @Builder.Default
+    private Set<PostLike> postLikes = new HashSet<>();
+
     public void addComment(Comment comment) {
         comments.add(comment);
         comment.setPost(this);

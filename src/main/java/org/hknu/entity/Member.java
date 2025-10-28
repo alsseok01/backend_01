@@ -1,12 +1,13 @@
 package org.hknu.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
-@Data
+import java.util.HashSet;
+import java.util.Set;
+
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
@@ -54,6 +55,10 @@ public class Member {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private AuthProvider provider;
+
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @Builder.Default
+    private Set<PostLike> postLikes = new HashSet<>();
 
     public void updateProfile(String profileImage, Integer age, String preferences, String bio) {
         if (profileImage != null) this.profileImage = profileImage;
