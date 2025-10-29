@@ -64,7 +64,23 @@ public class ReviewService {
                 .build();
 
         reviewRepository.save(review);
-        updateUserRating(reviewee.getId());
+
+        int currentTotalSum = (reviewee.getTotalRatingSum() == null) ? 0 : reviewee.getTotalRatingSum();
+        int currentTotalCount = (reviewee.getReviewCount() == null) ? 0 : reviewee.getReviewCount();
+
+        if (currentTotalSum == 0 && currentTotalCount > 0 && reviewee.getAverageRating() != null && reviewee.getAverageRating() > 0) {
+            currentTotalSum = (int) (reviewee.getAverageRating() * currentTotalCount);
+        }
+
+        int newTotalSum = currentTotalSum + reviewRequest.getRating();
+        int newTotalCount = currentTotalCount + 1;
+        double newAverage = (double) newTotalSum / newTotalCount;
+
+        reviewee.setTotalRatingSum(newTotalSum);
+        reviewee.setReviewCount(newTotalCount); // "총 받은 후기 개수" 업데이트
+        reviewee.setAverageRating(newAverage); // "평균 평점" 업데이트
+
+        memberRepository.save(reviewee);
 
         if (reviewer.getId().equals(match.getRequester().getId())) {
             match.setRequesterReviewed(true);
@@ -74,22 +90,21 @@ public class ReviewService {
         matchRepository.save(match);
     }
 
-    private void updateUserRating(Long memberId) {
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new RuntimeException("평점을 업데이트할 사용자를 찾을 수 없습니다."));
+    @Transactional
+    public void deleteReview(Long reviewId, String userEmail) {
+        Member member = memberRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new RuntimeException("사용자 정보를 찾을 수 없습니다."));
 
-        List<Review> reviews = reviewRepository.findByRevieweeId(memberId);
-        if (reviews.isEmpty()) {
-            member.setAverageRating(0.0);
-            member.setReviewCount(0);
-        } else {
-            double average = reviews.stream()
-                    .mapToInt(Review::getRating)
-                    .average()
-                    .orElse(0.0);
-            member.setAverageRating(average);
-            member.setReviewCount(reviews.size());
+        Review review = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new IllegalArgumentException("삭제할 후기를 찾을 수 없습니다."));
+
+        // 자신이 받은(reviewee) 후기만 삭제할 수 있도록 권한 확인
+        if (!review.getReviewee().getId().equals(member.getId())) {
+            throw new IllegalStateException("자신이 받은 후기만 삭제할 수 있습니다.");
         }
-        memberRepository.save(member);
+
+        // 후기만 삭제합니다.
+        // 평점(averageRating, totalRatingSum, reviewCount)은 절대 건드리지 않습니다.
+        reviewRepository.delete(review);
     }
 }

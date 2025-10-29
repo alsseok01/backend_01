@@ -20,7 +20,7 @@ public class Review {
 
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "match_id", nullable = false)
+    @JoinColumn(name = "match_id", nullable = true)
     private Match match;
 
     @ManyToOne(fetch = FetchType.LAZY)

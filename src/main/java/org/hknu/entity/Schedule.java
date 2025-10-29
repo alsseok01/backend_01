@@ -4,13 +4,17 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+// ✅ [수정] @Data 삭제
+import lombok.Getter; // ✅ [추가]
 import lombok.NoArgsConstructor;
+import lombok.Setter; // ✅ [추가]
 
 import java.util.ArrayList;
 import java.util.List;
 
-@Data
+// ✅ [수정] @Data를 @Getter와 @Setter로 변경
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity

@@ -42,8 +42,12 @@ public class Member {
 
     @Builder.Default
     private Double averageRating = 0.0;
+
     @Builder.Default
     private Integer reviewCount = 0;
+
+    @Builder.Default
+    private Integer totalRatingSum = 0;
 
     @Column(columnDefinition = "TEXT")
     private String fcmToken;

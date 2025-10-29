@@ -37,7 +37,7 @@ public class Match {
     @Builder.Default
     private boolean hostReviewed = false;
 
-    @OneToMany(mappedBy = "match", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    @OneToMany(mappedBy = "match")
     @Builder.Default
     private List<Review> reviews = new ArrayList<>();
 
